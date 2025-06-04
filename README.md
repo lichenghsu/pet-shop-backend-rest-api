@@ -96,8 +96,9 @@ mysql -h 127.0.0.1 -P 3306 -u root -p
 ## 快速啟動
 
 ```bash
-# 請先設定資料庫連線資訊於 application.yml
-./mvnw spring-boot:run
+# 請先設定資料庫連線資訊於 application-dev.yml
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+
 ```
 
 - 目前設定的資料庫為：`____`
