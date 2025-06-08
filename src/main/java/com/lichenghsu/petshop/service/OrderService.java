@@ -67,6 +67,23 @@ public class OrderService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
+    public OrderResponse getOrderById(Long orderId, Authentication authentication) {
+        String username = authentication.getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (!order.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Access denied");
+        }
+
+        return mapToResponse(order);
+    }
+
+    @Transactional
     public List<OrderResponse> getAllOrders() {
         return orderRepository.findAll().stream()
                 .map(this::mapToResponse)
@@ -82,7 +99,99 @@ public class OrderService {
         return mapToResponse(order);
     }
 
+    @Transactional
+    public OrderResponse updateOrderItems(Long orderId, List<OrderItemRequest> newItems) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
 
+        // remove existing items
+        orderItemRepository.deleteAll(order.getItems());
+
+        // rebuild new items
+        List<OrderItem> updatedItems = newItems.stream().map(itemReq -> {
+            Product product = productRepository.findById(itemReq.getProductId())
+                    .orElseThrow(() -> new RuntimeException("Product not found"));
+
+            OrderItem item = new OrderItem();
+            item.setProduct(product);
+            item.setQuantity(itemReq.getQuantity());
+            item.setPrice(product.getPrice() * itemReq.getQuantity());
+            item.setOrder(order);
+            return item;
+        }).collect(Collectors.toList());
+
+        order.setItems(updatedItems);
+        return mapToResponse(order);
+    }
+
+    @Transactional
+    public AdminOrderResponse getAdminOrderById(Long id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        return AdminOrderResponse.builder()
+                .id(order.getId())
+                .status(order.getStatus().name())
+                .createdAt(order.getCreatedAt())
+                .username(order.getUser().getUsername())
+                .email(order.getUser().getEmail())
+                .items(order.getItems().stream().map(item ->
+                        AdminOrderResponse.OrderItemDto.builder()
+                                .productName(item.getProduct().getName())
+                                .quantity(item.getQuantity())
+                                .price(item.getPrice())
+                                .build()
+                ).collect(Collectors.toList()))
+                .build();
+    }
+
+    @Transactional
+    public OrderResponse cancelOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (order.getStatus() != OrderStatus.PENDING && order.getStatus() != OrderStatus.PAID) {
+            throw new RuntimeException("Only PENDING or PAID orders can be cancelled.");
+        }
+
+        order.setStatus(OrderStatus.CANCELLED);
+        return mapToResponse(order);
+    }
+
+    @Transactional
+    public List<OrderResponse> queryOrders(OrderQueryParams params) {
+        List<Order> orders = orderRepository.findAll().stream()
+                .filter(order -> {
+                    boolean match = true;
+
+                    if (params.getUsername() != null && !params.getUsername().isEmpty()) {
+                        match &= order.getUser().getUsername().equals(params.getUsername());
+                    }
+
+                    if (params.getStatus() != null) {
+                        match &= order.getStatus() == params.getStatus();
+                    }
+
+                    if (params.getStartDate() != null) {
+                        match &= !order.getCreatedAt().toLocalDate().isBefore(params.getStartDate());
+                    }
+
+                    if (params.getEndDate() != null) {
+                        match &= !order.getCreatedAt().toLocalDate().isAfter(params.getEndDate());
+                    }
+
+                    return match;
+                })
+                .toList();
+
+        return orders.stream().map(this::mapToResponse).toList();
+    }
+
+    public AdminOrderResponse getAdminOrderDetails(Long id) {
+        return getAdminOrderById(id);
+    }
+
+    @Transactional
     private OrderResponse mapToResponse(Order order) {
         OrderResponse dto = new OrderResponse();
         dto.setId(order.getId());

@@ -1,18 +1,33 @@
 package com.lichenghsu.petshop.exception;
 
-import lombok.Getter;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
-@RestControllerAdvice
+import java.time.LocalDateTime;
+import java.util.Map;
+
+@ControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<?> handleRuntime(RuntimeException ex) {
-        return ResponseEntity.badRequest().body(new ErrorResponse(ex.getMessage()));
+    public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                Map.of(
+                        "timestamp", LocalDateTime.now(),
+                        "error", "Bad Request",
+                        "message", ex.getMessage()
+                )
+        );
     }
 
-    record ErrorResponse(String message) {
-
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleGeneralException(Exception ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                Map.of(
+                        "timestamp", LocalDateTime.now(),
+                        "error", "Server Error",
+                        "message", ex.getMessage()
+                )
+        );
     }
 }
