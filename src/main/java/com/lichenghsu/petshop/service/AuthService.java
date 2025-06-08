@@ -33,7 +33,7 @@ public class AuthService {
         authManager.authenticate(authentication);
 
         User user = userRepo.findByUsername(request.getUsername()).orElseThrow();
-        String token = jwtProvider.generateToken(user.getUsername());
+        String token = jwtProvider.generateToken(user);
 
         return new AuthResponse(token);
     }

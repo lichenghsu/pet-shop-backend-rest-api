@@ -7,6 +7,7 @@ import com.lichenghsu.petshop.service.ImageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -48,7 +49,7 @@ public class ImageController {
         return new ResponseEntity<>(imageData, headers, HttpStatus.OK);
     }
 
-
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public List<ImageResponse> upload(@RequestParam("files") MultipartFile[] files) {
 

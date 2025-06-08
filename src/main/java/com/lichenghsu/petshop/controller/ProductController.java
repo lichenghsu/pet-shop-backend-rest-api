@@ -5,6 +5,7 @@ import com.lichenghsu.petshop.dto.ProductResponse;
 import com.lichenghsu.petshop.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class ProductController {
         return ResponseEntity.ok(productService.findAll());
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ProductResponse> create(@RequestBody ProductRequest request) {
         return ResponseEntity.ok(productService.create(request));
@@ -31,6 +33,7 @@ public class ProductController {
         return ResponseEntity.ok(productService.findById(id));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         productService.delete(id);

@@ -5,5 +5,4 @@ public class UserRegisterRequest {
     private String password;
     private String email;
 
-    // Getters and Setters
 }
