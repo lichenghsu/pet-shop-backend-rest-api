@@ -1,13 +1,13 @@
 package com.lichenghsu.petshop.service;
 
-import com.lichenghsu.petshop.dto.OrderItemRequest;
-import com.lichenghsu.petshop.dto.OrderRequest;
-import com.lichenghsu.petshop.dto.OrderResponse;
+import com.lichenghsu.petshop.dto.*;
 import com.lichenghsu.petshop.entity.*;
+import com.lichenghsu.petshop.enums.OrderStatus;
 import com.lichenghsu.petshop.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,6 +22,7 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
 
+    @Transactional
     public OrderResponse placeOrder(OrderRequest request, Authentication authentication) {
         String username = authentication.getName();
         User user = userRepository.findByUsername(username)
@@ -30,7 +31,7 @@ public class OrderService {
         Order order = new Order();
         order.setUser(user);
         order.setCreatedAt(LocalDateTime.now());
-        order.setStatus("PENDING");
+        order.setStatus(OrderStatus.PENDING);
 
         List<OrderItem> items = request.getItems().stream().map(itemReq -> {
             Product product = productRepository.findById(itemReq.getProductId())
@@ -45,7 +46,7 @@ public class OrderService {
         }).collect(Collectors.toList());
 
         order.setItems(items);
-        orderRepository.save(order); // Cascade will save items
+        orderRepository.save(order);
 
         return mapToResponse(order);
     }
@@ -55,24 +56,49 @@ public class OrderService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return orderRepository.findAll().stream()
-                .filter(order -> order.getUser().getId().equals(user.getId()))
+        return orderRepository.findByUserId(user.getId()).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
+    public List<OrderResponse> getOrdersByStatus(OrderStatus status) {
+        return orderRepository.findByStatus(status).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<OrderResponse> getAllOrders() {
+        return orderRepository.findAll().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public OrderResponse updateStatus(Long orderId, OrderStatus status) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        order.setStatus(status);
+        return mapToResponse(order);
+    }
+
+
     private OrderResponse mapToResponse(Order order) {
         OrderResponse dto = new OrderResponse();
         dto.setId(order.getId());
-        dto.setStatus(order.getStatus());
+        dto.setStatus(OrderStatus.valueOf(order.getStatus().name()));
         dto.setCreatedAt(order.getCreatedAt());
-        dto.setItems(order.getItems().stream().map(item -> {
-            OrderResponse.OrderItemDto itemDto = new OrderResponse.OrderItemDto();
-            itemDto.setProductName(item.getProduct().getName());
-            itemDto.setQuantity(item.getQuantity());
-            itemDto.setPrice(item.getPrice());
-            return itemDto;
-        }).collect(Collectors.toList()));
+        dto.setItems(
+                order.getItems().stream()
+                        .map(item -> {
+                            OrderResponse.OrderItemDto itemDto = new OrderResponse.OrderItemDto();
+                            itemDto.setProductName(item.getProduct().getName());
+                            itemDto.setQuantity(item.getQuantity());
+                            itemDto.setPrice(item.getPrice());
+                            return itemDto;
+                        })
+                        .collect(Collectors.toList())
+        );
         return dto;
     }
 }

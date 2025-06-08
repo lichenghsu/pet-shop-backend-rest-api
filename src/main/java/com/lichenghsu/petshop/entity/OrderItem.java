@@ -15,7 +15,7 @@ public class OrderItem {
 
     private int quantity;
 
-    private double price; // ⬅️ 加上這個欄位
+    private double price;
 
     @ManyToOne
     @JoinColumn(name = "product_id")

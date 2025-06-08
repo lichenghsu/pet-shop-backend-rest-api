@@ -129,9 +129,9 @@ mysql -h 127.0.0.1 -P 3306 -u root -p
 ## TODO
 
 - [x] 初始化專案骨架
-- [ ] 設計 `User` 與 `Role` Entity
-- [ ] 完成 JWT 登入/註冊流程
-- [ ] 商品模組 API 設計
+- [x] 設計 `User` 與 `Role` Entity
+- [x] 完成 JWT 登入/註冊流程
+- [x] 商品模組 API 設計
 - [ ] 整合 Swagger
 - [ ] Railway 自動部署
 
