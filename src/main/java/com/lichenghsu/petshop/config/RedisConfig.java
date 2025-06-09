@@ -6,17 +6,17 @@ import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.*;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializer;
 
 import java.time.Duration;
 
 @Configuration
 public class RedisConfig {
 
-    // Redis Connection Factory (使用 Lettuce 為預設)
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
-        return new LettuceConnectionFactory();
+        return new LettuceConnectionFactory(); // 預設連 localhost:6379
     }
 
     @Bean
@@ -24,9 +24,8 @@ public class RedisConfig {
         RedisTemplate<String, byte[]> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
-        // ✅ 正確的 Key 和 Value 序列器
         template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new org.springframework.data.redis.serializer.RedisSerializer<byte[]>() {
+        template.setValueSerializer(new RedisSerializer<byte[]>() {
             @Override
             public byte[] serialize(byte[] bytes) {
                 return bytes;
@@ -38,15 +37,15 @@ public class RedisConfig {
             }
         });
 
+        template.afterPropertiesSet(); // 確保所有設置都生效
         return template;
     }
 
-
-    // 可選：設定 Cache 使用時的預設 TTL（如需配合 @Cacheable）
+    //  @Cacheable設定
     @Bean
     public RedisCacheConfiguration cacheConfiguration() {
         return RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofMinutes(5))
+                .entryTtl(Duration.ofMinutes(5)) // 預設存活時間
                 .disableCachingNullValues();
     }
 }

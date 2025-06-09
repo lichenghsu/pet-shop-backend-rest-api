@@ -45,28 +45,37 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        // 開放身份驗證 API 與錯誤頁
                         .requestMatchers("/api/auth/**", "/error").permitAll()
+
+                        // Swagger 開放
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+
+                        // 管理員操作：訂單 & 商品 CRUD
                         .requestMatchers("/api/orders/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/orders", "/api/orders/**").authenticated()
-
-                        // 商品與圖片的 GET 可匿名，其他方法需驗證
-                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/images/**").permitAll()
-
                         .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
 
+                        // 商品圖片 GET 可匿名，其他需登入
+                        .requestMatchers(HttpMethod.GET, "/api/products/**", "/api/images/**").permitAll()
                         .requestMatchers("/api/products/**", "/api/images/**").authenticated()
+
+                        // 訂單需登入（一般使用者）
+                        .requestMatchers("/api/orders/**").authenticated()
+
+                        // 分類與標籤開放
                         .requestMatchers("/api/categories/**", "/api/tags/**").permitAll()
 
-                        .anyRequest().authenticated()
+                        // 其他未明確規定的請求全部擋下
+                        .anyRequest().denyAll()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
+
 
 
     @Bean

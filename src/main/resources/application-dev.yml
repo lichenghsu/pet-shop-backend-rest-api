@@ -1,5 +1,9 @@
 
 spring:
+
+  cache:
+    type: redis
+
   datasource:
     url: jdbc:mysql://localhost:3306/petshop
     username: root
@@ -17,6 +21,13 @@ spring:
   redis:
     host: localhost
     port: 6379
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    disable-swagger-default-url: true
 
 server:
   port: 8080
