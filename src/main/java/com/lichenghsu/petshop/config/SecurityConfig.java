@@ -64,19 +64,21 @@ public class SecurityConfig {
                         // 訂單需登入（一般使用者）
                         .requestMatchers("/api/orders/**").authenticated()
 
+                        // 使用者資訊 API 需登入
+                        .requestMatchers("/api/users/**").authenticated()
+
                         // 分類與標籤開放
                         .requestMatchers("/api/categories/**", "/api/tags/**").permitAll()
 
                         // 其他未明確規定的請求全部擋下
                         .anyRequest().denyAll()
                 )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
-
-
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {

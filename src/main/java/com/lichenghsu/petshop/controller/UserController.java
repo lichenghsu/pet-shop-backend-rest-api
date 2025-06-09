@@ -23,9 +23,10 @@ public class UserController {
     public ResponseEntity<UserInfoResponse> getCurrentUser(Authentication authentication) {
         String username = authentication.getName();
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("使用者不存在：" + username));
 
         UserInfoResponse response = new UserInfoResponse(user.getUsername(), user.getEmail());
         return ResponseEntity.ok(response);
     }
+
 }
