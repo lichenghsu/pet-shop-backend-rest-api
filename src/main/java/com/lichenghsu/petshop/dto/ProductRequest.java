@@ -1,5 +1,6 @@
 package com.lichenghsu.petshop.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -7,41 +8,18 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
+@Schema(description = "新增或更新商品所需資料")
 public class ProductRequest {
+
+    @Schema(description = "商品名稱", example = "狗飼料")
     private String name;
+
+    @Schema(description = "商品描述", example = "適合中大型犬的全齡狗飼料")
     private String description;
+
+    @Schema(description = "商品價格", example = "499.0")
     private double price;
+
+    @Schema(description = "圖片 ID 清單", example = "[1, 2]")
     private List<Long> imageIds;
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public double getPrice() {
-        return price;
-    }
-
-    public void setPrice(double price) {
-        this.price = price;
-    }
-
-    public List<Long> getImageIds() {
-        return imageIds;
-    }
-
-    public void setImageIds(List<Long> imageIds) {
-        this.imageIds = imageIds;
-    }
 }
