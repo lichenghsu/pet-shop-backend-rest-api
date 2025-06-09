@@ -4,7 +4,13 @@ import com.lichenghsu.petshop.dto.ImageResponse;
 import com.lichenghsu.petshop.entity.Image;
 import com.lichenghsu.petshop.repository.ImageRepository;
 import com.lichenghsu.petshop.service.ImageService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.*;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,9 +20,11 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/images")
 @RequiredArgsConstructor
+@Tag(name = "圖片", description = "用於上傳和搜尋圖片的 API")
 public class ImageController {
 
     private final ImageRepository imageRepository;
@@ -24,23 +32,31 @@ public class ImageController {
     private final RedisTemplate<String, byte[]> redisTemplate;
 
     @GetMapping("/{id}")
-    public ResponseEntity<byte[]> getImage(@PathVariable Long id) {
+    @Operation(summary = "透過 ID 取得圖片", description = "通過圖片 ID 取得圖片，支持 REDIS CACHE。")
+    @ApiResponse(responseCode = "200", description = "圖片搜尋成功", content = @Content(mediaType = "image/jpeg"))
+    @ApiResponse(responseCode = "404", description = "未找到圖片")
+    public ResponseEntity<byte[]> getImage(
+            @Parameter(description = "Image ID", required = true) @PathVariable Long id) {
+
         String redisKey = "image:" + id;
         byte[] imageData = redisTemplate.opsForValue().get(redisKey);
 
         if (imageData == null || imageData.length == 0) {
-            System.out.println("Redis miss or empty, fetching image from DB: " + id);
+            log.info("Redis miss or empty, fetching image from DB: {}", id);
             Image image = imageRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Image not found"));
 
             imageData = image.getData();
-            System.out.println("Fetched image from DB, length = " + (imageData != null ? imageData.length : 0));
+            log.info("Fetched image from DB, length = {}", (imageData != null ? imageData.length : 0));
 
             if (imageData != null && imageData.length > 0) {
                 redisTemplate.opsForValue().set(redisKey, imageData, 5, TimeUnit.MINUTES);
+                log.info("Image cached to Redis for 5 minutes: {}", redisKey);
             } else {
-                System.out.println("Warning: image data is empty, not caching to Redis");
+                log.warn("Image data is empty, not caching to Redis");
             }
+        } else {
+            log.info("Redis hit: {}", redisKey);
         }
 
         HttpHeaders headers = new HttpHeaders();
@@ -51,11 +67,18 @@ public class ImageController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public List<ImageResponse> upload(@RequestParam("files") MultipartFile[] files) {
+    @Operation(summary = "上傳圖片", description = "管理員可上傳一張或多張圖片")
+    @ApiResponse(responseCode = "200", description = "圖片成功上傳",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = ImageResponse.class))))
+    public List<ImageResponse> upload(
+            @Parameter(description = "Array of image files", required = true)
+            @RequestParam("files") MultipartFile[] files) {
 
-        return Arrays.stream(files)
+        log.info("Uploading {} image file(s)", files.length);
+        List<ImageResponse> results = Arrays.stream(files)
                 .map(imageService::upload)
                 .toList();
+        log.info("Upload finished, {} image(s) saved", results.size());
+        return results;
     }
-
 }
