@@ -67,8 +67,20 @@ public class SecurityConfig {
                         // 使用者資訊 API 需登入
                         .requestMatchers("/api/users/**").authenticated()
 
-                        // 分類與標籤開放
-                        .requestMatchers("/api/categories/**", "/api/tags/**").permitAll()
+                        // 新增評論需要登入，查看商品評論（開放給所有人
+                        .requestMatchers(HttpMethod.POST, "/api/reviews").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/reviews/**").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.GET, "/api/tags/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/tags/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/tags/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/tags/**").hasRole("ADMIN")
 
                         // 其他未明確規定的請求全部擋下
                         .anyRequest().denyAll()
