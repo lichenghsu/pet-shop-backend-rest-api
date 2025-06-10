@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: pet-shop-backend-rest-api
+  profiles:
+    active: dev  # 依需求切換為 dev 或 prod
+
+  jackson:
+    date-format: com.fasterxml.jackson.databind.util.ISO8601DateFormat
+    time-zone: UTC
+
+server:
+  port: ${port:8080}
+  compression:
+    enabled: true
