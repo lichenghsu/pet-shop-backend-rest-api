@@ -66,19 +66,18 @@ public class ImageController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping
-    @Operation(summary = "上傳圖片", description = "管理員可上傳一張或多張圖片")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "上傳圖片",
+            description = "管理員可上傳一張或多張圖 (Swagger UI 無法上傳，請用 Postman 測試）"
+    )
     @ApiResponse(responseCode = "200", description = "圖片成功上傳",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = ImageResponse.class))))
     public List<ImageResponse> upload(
-            @Parameter(description = "Array of image files", required = true)
+            @Parameter(description = "圖片檔案陣列", required = true)
             @RequestParam("files") MultipartFile[] files) {
-
         log.info("Uploading {} image file(s)", files.length);
-        List<ImageResponse> results = Arrays.stream(files)
-                .map(imageService::upload)
-                .toList();
-        log.info("Upload finished, {} image(s) saved", results.size());
-        return results;
+        return Arrays.stream(files).map(imageService::upload).toList();
     }
+
 }
