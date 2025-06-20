@@ -3,6 +3,7 @@ package com.lichenghsu.petshop.service;
 import com.lichenghsu.petshop.dto.ImageResponse;
 import com.lichenghsu.petshop.entity.Image;
 import com.lichenghsu.petshop.repository.ImageRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,6 +18,7 @@ public class ImageService {
 
     private final ImageRepository imageRepository;
 
+    @Transactional
     public ImageResponse upload(MultipartFile file) {
         try {
             String filename = UUID.randomUUID() + "-" + file.getOriginalFilename();
@@ -38,7 +40,6 @@ public class ImageService {
 
             imageRepository.save(image);
 
-            // ✅ 自動刪除上傳的實體檔案
             Files.deleteIfExists(filePath);
 
             return new ImageResponse(image.getId(), "/api/images/" + image.getId());

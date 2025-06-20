@@ -23,11 +23,17 @@ public class ProductResponse {
     @Schema(description = "商品價格")
     private double price;
 
-    @Schema(description = "圖片 URL 清單")
-    private List<String> imageUrls;
+    @Schema(description = "圖片編號清單")
+    private List<Long> imageIds;
+
+    @Schema(description = "分類編號")
+    private double categoryId;
 
     @Schema(description = "分類名稱")
     private String categoryName;
+
+    @Schema(description = "標籤名單編號清單")
+    private List<Long> tagIds;
 
     @Schema(description = "標籤名稱清單")
     private List<String> tagNames;

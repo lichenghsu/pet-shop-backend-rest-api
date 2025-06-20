@@ -23,7 +23,7 @@ public class Product {
 
     // 圖片
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProductImage> images;
+    private List<ProductImage> images = new ArrayList<>();
 
     // 分類（多對一）
     @ManyToOne

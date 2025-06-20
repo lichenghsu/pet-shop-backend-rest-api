@@ -73,11 +73,38 @@ public class ImageController {
     )
     @ApiResponse(responseCode = "200", description = "圖片成功上傳",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = ImageResponse.class))))
-    public List<ImageResponse> upload(
+    public ResponseEntity<?> upload(
             @Parameter(description = "圖片檔案陣列", required = true)
             @RequestParam("files") MultipartFile[] files) {
-        log.info("Uploading {} image file(s)", files.length);
-        return Arrays.stream(files).map(imageService::upload).toList();
+        if (files == null || files.length == 0) {
+            log.warn("未收到任何檔案");
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of("error", "未收到任何檔案"));
+        }
+
+        List<ImageResponse> uploaded = new ArrayList<>();
+        List<String> failedFiles = new ArrayList<>();
+
+        for (MultipartFile file : files) {
+            try {
+                log.info("開始上傳圖片: {}", file.getOriginalFilename());
+                ImageResponse response = imageService.upload(file);
+                uploaded.add(response);
+            } catch (Exception e) {
+                log.error("圖片上傳失敗: {}，原因: {}", file.getOriginalFilename(), e.getMessage());
+                failedFiles.add(file.getOriginalFilename());
+            }
+        }
+
+        if (!failedFiles.isEmpty()) {
+            String msg = "部分圖片上傳失敗: " + String.join(", ", failedFiles);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", msg));
+        }
+        log.info("圖片新增成功");
+        return ResponseEntity.ok(uploaded);
     }
 
 }

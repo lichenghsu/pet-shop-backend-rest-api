@@ -52,6 +52,16 @@ public class ProductController {
         return ResponseEntity.ok(productService.create(request));
     }
 
+    @Operation(summary = "更新商品（限管理員）", description = "根據 ID 更新商品資料，需附上分類 ID、圖片 ID 與標籤 ID")
+    @ApiResponse(responseCode = "200", description = "更新成功",
+            content = @Content(schema = @Schema(implementation = ProductResponse.class)))
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}")
+    public ResponseEntity<ProductResponse> update(@PathVariable Long id, @RequestBody ProductRequest request) {
+        log.info("更新商品 ID = {}，內容 = {}", id, request);
+        return ResponseEntity.ok(productService.update(id, request));
+    }
+
     @Operation(summary = "刪除商品（限管理員）", description = "根據 ID 刪除指定商品")
     @ApiResponse(responseCode = "204", description = "刪除成功")
     @PreAuthorize("hasRole('ADMIN')")
