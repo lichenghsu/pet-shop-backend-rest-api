@@ -26,6 +26,9 @@ public class ProductResponse {
     @Schema(description = "圖片編號清單")
     private List<Long> imageIds;
 
+    @Schema(description = "圖片網址清單")
+    private List<String> imageUrls;
+
     @Schema(description = "分類編號")
     private double categoryId;
 

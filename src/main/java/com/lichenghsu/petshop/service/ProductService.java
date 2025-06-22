@@ -3,10 +3,7 @@ package com.lichenghsu.petshop.service;
 import com.lichenghsu.petshop.dto.ProductRequest;
 import com.lichenghsu.petshop.dto.ProductResponse;
 import com.lichenghsu.petshop.entity.*;
-import com.lichenghsu.petshop.repository.CategoryRepository;
-import com.lichenghsu.petshop.repository.ProductRepository;
-import com.lichenghsu.petshop.repository.ImageRepository;
-import com.lichenghsu.petshop.repository.TagRepository;
+import com.lichenghsu.petshop.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.Hibernate;
@@ -26,6 +23,7 @@ public class ProductService {
     private final ImageRepository imageRepository;
     private final CategoryRepository categoryRepository;
     private final TagRepository tagRepository;
+    private final ProductImageRepository productImageRepository;
 
     @Transactional
     public List<ProductResponse> findAll() {
@@ -106,39 +104,33 @@ public class ProductService {
         }
 
         // 圖片
-        List<ProductImage> productImages = new ArrayList<>();
-
         if (request.getImageIds() != null) {
             List<Long> incomingIds = request.getImageIds();
 
-            // 找出目前圖片 ID
-            List<Long> currentIds = product.getImages().stream()
-                    .map(img -> img.getImage().getId())
+            productImageRepository.deleteByProductId(product.getId());
+
+            List<ProductImage> newProductImages = incomingIds.stream()
+                    .map(imageId -> {
+                        Image image = imageRepository.findById(imageId)
+                                .orElseThrow(() -> new RuntimeException("Image not found: " + imageId));
+                        ProductImage pi = new ProductImage();
+                        pi.setImage(image);
+                        pi.setProduct(product);
+                        return pi;
+                    })
                     .toList();
 
-            // 若不同，才進行更新
-            if (!new HashSet<>(incomingIds).equals(new HashSet<>(currentIds))) {
-                List<ProductImage> newImages = incomingIds.stream()
-                        .map(imageId -> {
-                            Image image = imageRepository.findById(imageId)
-                                    .orElseThrow(() -> new RuntimeException("Image not found: " + imageId));
-                            ProductImage pi = new ProductImage();
-                            pi.setImage(image);
-                            pi.setProduct(product);
-                            return pi;
-                        })
-                        .collect(Collectors.toList());
-
-                product.setImages(newImages);
-            }
+            // 用 setImages 覆蓋整個 List，避免 Hibernate session cache 衝突
+            product.getImages().clear();
+            product.getImages().addAll(newProductImages);
         }
-
 
         Hibernate.initialize(product.getImages());
         Hibernate.initialize(product.getTags());
 
         return mapToResponse(productRepository.save(product));
     }
+
 
     public void delete(Long id) {
         productRepository.deleteById(id);
@@ -149,6 +141,10 @@ public class ProductService {
         List<Long> imageIds = product.getImages().stream()
                 .map(pi -> pi.getImage().getId())
                 .collect(Collectors.toList());
+
+        List<String> imageUrls = product.getImages().stream()
+                .map(pi -> pi.getImage().getUrl())
+                .toList();
 
         List<String> tagNames = product.getTags().stream()
                 .map(Tag::getName)
@@ -164,6 +160,7 @@ public class ProductService {
                 product.getDescription(),
                 product.getPrice(),
                 imageIds,
+                imageUrls,
                 product.getCategory().getId(),
                 product.getCategory().getName(),
                 tagIds,
