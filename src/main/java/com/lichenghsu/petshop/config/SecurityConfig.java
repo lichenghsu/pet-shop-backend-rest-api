@@ -58,6 +58,9 @@ public class SecurityConfig {
                         // Swagger 開放
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
+                        // Dashboard
+                        .requestMatchers(HttpMethod.GET, "/api/dashboard/**").hasRole("ADMIN")
+
                         // 管理員操作：訂單 & 商品 CRUD
                         .requestMatchers("/api/orders/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
@@ -106,15 +109,15 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-      CorsConfiguration config = new CorsConfiguration();
-      config.setAllowedOrigins(List.of("http://localhost:5173"));
-      config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-      config.setAllowedHeaders(List.of("*"));
-      config.setAllowCredentials(true); 
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOriginPatterns(List.of("http://localhost:5173")); // ✅ 改這裡
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true); // 若前端帶 cookie/token
 
-      UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-      source.registerCorsConfiguration("/**", config);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
         return source;
-}
+    }
 }
 

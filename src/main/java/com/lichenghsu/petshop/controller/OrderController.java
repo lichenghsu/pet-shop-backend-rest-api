@@ -52,14 +52,5 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getMyOrders(authentication));
     }
 
-    @Operation(summary = "更新訂單商品內容", description = "修改指定訂單的商品清單與數量")
-    @ApiResponse(responseCode = "200", description = "修改成功",
-            content = @Content(schema = @Schema(implementation = OrderResponse.class)))
-    @PutMapping("/{id}/items")
-    @Transactional
-    public ResponseEntity<OrderResponse> updateItems(
-            @PathVariable Long id,
-            @RequestBody List<OrderItemRequest> items) {
-        return ResponseEntity.ok(orderService.updateOrderItems(id, items));
-    }
+
 }

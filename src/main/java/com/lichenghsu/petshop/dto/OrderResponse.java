@@ -14,6 +14,15 @@ public class OrderResponse {
     @Schema(description = "訂單 ID", example = "1001")
     private Long id;
 
+    @Schema(description = "使用者 ID", example = "1")
+    private Long userId;
+
+    @Schema(description = "使用者帳號", example = "admin")
+    private String username;
+
+    @Schema(description = "使用者 Email", example = "admin@example.com")
+    private String email;
+
     @Schema(description = "訂單狀態", example = "PENDING")
     private OrderStatus status;
 

@@ -23,6 +23,9 @@ public class AdminOrderResponse {
     @Schema(description = "建立時間", example = "2025-06-08T12:51:49.063232")
     private LocalDateTime createdAt;
 
+    @Schema(description = "使用者 ID", example = "1")
+    private Long userId;
+
     @Schema(description = "使用者帳號", example = "admin")
     private String username;
 

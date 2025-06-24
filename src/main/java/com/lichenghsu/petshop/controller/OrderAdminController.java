@@ -1,6 +1,7 @@
 package com.lichenghsu.petshop.controller;
 
 import com.lichenghsu.petshop.dto.AdminOrderResponse;
+import com.lichenghsu.petshop.dto.OrderItemRequest;
 import com.lichenghsu.petshop.dto.OrderResponse;
 import com.lichenghsu.petshop.dto.UpdateOrderStatusRequest;
 import com.lichenghsu.petshop.enums.OrderStatus;
@@ -68,5 +69,24 @@ public class OrderAdminController {
             @PathVariable Long id,
             @RequestBody UpdateOrderStatusRequest request) {
         return ResponseEntity.ok(orderService.updateStatus(id, request.getStatus()));
+    }
+
+    @Operation(summary = "批次更新訂單狀態", description = "可一次更新多筆訂單的狀態")
+    @PatchMapping("/batch-status")
+    @Transactional
+    public ResponseEntity<?> batchUpdateStatus(@RequestBody UpdateOrderStatusRequest request) {
+        orderService.batchUpdateStatuses(request.getOrderIds(), request.getStatus());
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "更新訂單商品內容", description = "修改指定訂單的商品清單與數量")
+    @ApiResponse(responseCode = "200", description = "修改成功",
+            content = @Content(schema = @Schema(implementation = OrderResponse.class)))
+    @PutMapping("/{id}/items")
+    @Transactional
+    public ResponseEntity<OrderResponse> updateItems(
+            @PathVariable Long id,
+            @RequestBody List<OrderItemRequest> items) {
+        return ResponseEntity.ok(orderService.updateOrderItems(id, items));
     }
 }

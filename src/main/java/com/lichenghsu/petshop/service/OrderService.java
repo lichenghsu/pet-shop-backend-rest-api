@@ -133,6 +133,7 @@ public class OrderService {
                 .id(order.getId())
                 .status(order.getStatus().name())
                 .createdAt(order.getCreatedAt())
+                .userId(order.getUser().getId())
                 .username(order.getUser().getUsername())
                 .email(order.getUser().getEmail())
                 .items(order.getItems().stream().map(item ->
@@ -192,11 +193,28 @@ public class OrderService {
     }
 
     @Transactional
+    public void batchUpdateStatuses(List<Long> orderIds, OrderStatus status) {
+        List<Order> orders = orderRepository.findAllById(orderIds);
+
+        for (Order order : orders) {
+            order.setStatus(status);
+        }
+
+        // 如果你使用 JPA 且啟用 Transactional，修改後會自動 flush。
+        // 若要強制立即儲存到 DB，可呼叫 saveAll（但通常不需要）
+        // orderRepository.saveAll(orders);
+    }
+
     private OrderResponse mapToResponse(Order order) {
         OrderResponse dto = new OrderResponse();
         dto.setId(order.getId());
         dto.setStatus(OrderStatus.valueOf(order.getStatus().name()));
         dto.setCreatedAt(order.getCreatedAt());
+
+        dto.setUserId(order.getUser().getId());
+        dto.setUsername(order.getUser().getUsername());
+        dto.setEmail(order.getUser().getEmail());
+
         dto.setItems(
                 order.getItems().stream()
                         .map(item -> {
@@ -208,6 +226,7 @@ public class OrderService {
                         })
                         .collect(Collectors.toList())
         );
+
         return dto;
     }
 }
