@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.*;
 import java.util.UUID;
 
@@ -39,13 +40,29 @@ public class ImageService {
             image.setContentType(file.getContentType());
 
             imageRepository.save(image);
-
             Files.deleteIfExists(filePath);
 
             return new ImageResponse(image.getId(), "/api/images/" + image.getId());
-
         } catch (IOException e) {
             throw new RuntimeException("圖片上傳失敗", e);
+        }
+    }
+
+    @Transactional
+    public Long saveImage(InputStream inputStream) {
+        try {
+            byte[] imageBytes = inputStream.readAllBytes();
+
+            Image image = new Image();
+            image.setFilename(UUID.randomUUID() + ".jpg");
+            image.setData(imageBytes);
+            image.setContentType("image/jpeg");
+
+            imageRepository.save(image);
+            return image.getId();
+
+        } catch (IOException e) {
+            throw new RuntimeException("圖片儲存失敗", e);
         }
     }
 }

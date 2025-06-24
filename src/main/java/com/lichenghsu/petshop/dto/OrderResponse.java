@@ -43,6 +43,6 @@ public class OrderResponse {
         private int quantity;
 
         @Schema(description = "價格總計", example = "998.0")
-        private double price;
+        private Double price;
     }
 }
