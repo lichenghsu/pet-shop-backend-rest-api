@@ -1,30 +1,26 @@
 spring:
+
   cache:
     type: redis
 
+  port: 8080
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
   datasource:
-    url: jdbc:mysql://db:3306/petshop  # 可改為 Railway/Render 對應資料庫
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
-  jpa:
-    hibernate:
-      ddl-auto: none
-    open-in-view: false
-    show-sql: false
-    database-platform: org.hibernate.dialect.MySQL8Dialect
-
   redis:
-    host: redis
-    port: 6379
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
 
-  springdoc:
-    api-docs:
-      path: /v3/api-docs
-    swagger-ui:
-      path: /swagger-ui.html
-      disable-swagger-default-url: true
+jwt:
+  secret: ${JWT_SECRET}
 
-server:
-  port: 8080
+cors:
+  allowed-origins: ${CORS_ORIGINS:*}
